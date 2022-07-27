@@ -5,7 +5,7 @@ Authors@R: c(
     person("Manuel", "Mendoza", email = "manuelmendoza@uvigo.gal", role = c("aut", "cre")),
     person("Carlos", "Canchaya", email = "canchaya@uvigo.gal", role = c()))
 Description: What the package does (one paragraph).
-License: use_mit_license()
+License: MIT + file LICENSE
 Depends:
   R (>= 4.1.2),
   readr,
