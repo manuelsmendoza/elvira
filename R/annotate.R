@@ -1,3 +1,12 @@
+#' Check if the homologous proteins identified by local alignment come from a certain phylum
+#'
+#' @param nr_matches The BLASTP result against the NCBI non-redundant protein database (BLAST output format 6)
+#' @param tr_matches The BLASTP result against the UniPrto/TrEMBL database (BLAST output format 6)
+#' @param nr_taxonomy Dataset with information to convert NCBI accession number to taxonomy information
+#' @param tr_taxonomy Dataset with information to convert UniProt accession number to taxonomy information
+#' @param phylum_name Phylum name to check
+#' @param evalmax Maximum e-value allowed to qualify a match
+#' @return If the matches correspond to the phylum specified
 check_taxonomy <- function(nr_matches, nr_taxonomy = NULL, tr_matches, tr_taxonomy = NULL, phylum_name = "Mollusca", evalmax = 1e-06) {
     # Attach the dataset to convert proteins ID to taxonomy information
     if (is.null(nr_taxonomy)) {

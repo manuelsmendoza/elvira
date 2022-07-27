@@ -3,8 +3,8 @@ Title: Transcriptome de novo analysis
 Version: 0.1
 Authors@R: c(
     person("Manuel", "Mendoza", email = "manuelmendoza@uvigo.gal", role = c("aut", "cre")),
-    person("Carlos", "Canchaya", email = "canchaya@uvigo.gal", role = c()))
-Description: What the package does (one paragraph).
+    person("Carlos", "Canchaya", email = "canchaya@uvigo.gal", role = c("ths", "rev")))
+Description: Set of functions usefull to analyse transcriptome of reference 
 License: MIT + file LICENSE
 Depends:
   R (>= 4.1.2),
