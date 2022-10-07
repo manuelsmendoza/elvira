@@ -352,6 +352,179 @@ Cantalapiedra et al. 2021) with the following options:
 
 The other options were set by default.
 
+## Additional steps
+
+**Over-represented sequences analysis**: We extracted the
+overrepresented sequences identified using FastQC and aligned them to
+the Nucleotide database. The result is showed in the Table S2.
+
+``` r
+# Attach the packages
+library(fastqcr)
+library(dplyr)
+library(Biostrings)
+
+# Extract the overrepresented sequences and their abundance
+overseq_tbl <- full_join(
+  qc_plot(qc_read("sample_1_fastqc.zip"), "Overrepresented sequences") %>% select(Sequence, Count) %>% rename("frcts" = Count),
+  qc_plot(qc_read("sample_2_fastqc.zip"), "Overrepresented sequences") %>% select(Sequence, Count) %>% rename("rvcts" = Count)
+  )
+
+# Export overrepresented sequences
+overseq <- DNAStringSet(overseq_tbl %>% pull(Sequence))
+names(overseq) <- paste0("ELVIRA_OVERSEQ-", 1:nrow(overseq_tbl))
+writeXStringSet(x = overseq, filepath = "sample.overseq.fna", append = FALSE)
+```
+
+``` bash
+# Align the overrepresented sequences to the Nucleotide database 
+blastn \
+  -num_threads $SLURM_NTASKS \
+  -task blastn-short \
+  -db nt \
+  -query sample.overseq.fna
+  -out sample.overseq.nt.tsv \
+  -evalue 1e-3 \
+  -outfmt 6 \
+  -perc_identity 75 \
+  -max_target_seqs 1 \
+  -max_hsps 1
+```
+
+**Transcriptome fragmentation**: We checked if the transcript were
+assembled completely and the proteins coverage (we required the
+alignment obtained in the STEP 7).
+
+``` r
+# Calculate fragmentation and protein coverage
+trans_frag <- check_completeness(
+  prot_seqs  = "sample.good.rmdup.slugs.faa",
+  prot_blast = "sample.good.rmdup.slugs.nr.tsv"
+)
+
+# Export the result
+write_delim(trans_frag, file = "sample.fragmentation.tsv", delim = "\t", append = FALSE, col_names = TRUE)
+```
+
+**Orthogroups detection**: We detected the different orthogroups using
+OrthoFinder (Emms and Kelly 2019). After, these sequences were aligned
+using MAFFT (Katoh et al. 2002). OrthoFinder is not reporting the final
+species tree correctly (Issue
+\#732)\[<https://github.com/davidemms/OrthoFinder/issues/732>\] so, we
+had to build it using an alternaltive approach.
+
+``` bash
+# Create a dump directory to store the different transcriptomes
+mkdir ref_sequences
+
+# Run OrthoFinder
+orthofinder \
+  -f ref_sequences \
+  -a $SLURM_NTASKS \
+  -M msa \
+  -A mafft \
+  -T raxml-ng \
+  -o slugs_ortphy
+```
+
+**Building the species tree**:
+
+``` bash
+# Estimate the substitution model
+modeltest-ng \
+  --force \
+  --processes $SLURM_NTASKS \ 
+  --datatype aa \
+  --input slugs_ortphy/*/MultipleSequenceAlignments/SpeciesTreeAlignment.fa \
+  --output SpeciesTreeAlignment.model \
+  --topology ml \
+  --frequencies e \
+  --model-het f \
+  --template raxml
+
+# Build the ML tree
+raxml-ng \
+  --redo \
+  --threads $SLURM_NTASKS \
+  --all \
+  --check \
+  --msa slugs_ortphy/*/MultipleSequenceAlignments/SpeciesTreeAlignment.fa \
+  --model MODEL \
+  --blopt nr_safe \
+  --bs-trees 10000 
+```
+
+**Orthogroups gene-ontology enrichment**
+
+``` r
+# Attach the libraries
+library(topGO)
+library(readr)
+library(dplyr)
+library(stringr)
+
+# Load the Orthogroups information
+cnames      <- c("Orthogroup", "ACA", "ECH", "ECO", "ECR", "EOR", "ETI", "EVI", "OVI", "POC")
+orthogroups <- read_delim(file = "orthofinder_dir/Orthogroups.tsv", delim = "\t", col_names = cnames, skip = 1) 
+
+# Load ELVIRA annotation
+txannotation <- readMappings(file = "sample.good.rmdup.slugs.trans2go.tsv", sep = "\t", IDsep = ";")  
+```
+
+``` r
+# Pick up the genes of interest
+# KLEPTOPLASTY
+txsubset <- orthogroups %>% 
+  filter(is.na(ACA), is.na(OVI), !is.na(ECO), !is.na(EOR), !is.na(ECR), !is.na(ETI), !is.na(ECH), !is.na(EVI), !is.na(POC)) %>%
+  pull(EVI) 
+
+# LONG-TERM RETAINERS
+txsubset <- orthogroups %>% 
+  filter(is.na(ACA), is.na(OVI), is.na(ECO), is.na(EOR), !is.na(ECR), !is.na(ETI), !is.na(ECH), !is.na(EVI), !is.na(POC)) %>%
+  pull(EVI) 
+
+# LTR ULVOPHYCEAE-FEEDER
+txsubset <- orthogroups %>% 
+  filter(is.na(ACA), is.na(OVI), is.na(ECO), is.na(EOR), !is.na(ECR), !is.na(ETI), is.na(ECH), !is.na(EVI), !is.na(POC)) %>%
+  pull(EVI) 
+
+# Select the genes of interest 
+txsubset <- unlist(str_split(string = txsubset, pattern = ", "))
+txsubset <- factor(as.integer(names(txannotation) %in% txsubset))
+names(txsubset) <- names(txannotation)
+```
+
+``` r
+# Perform GO-term enrichment
+# Biological Process
+bp_godata <- new("topGOdata", ontology = "BP", allGenes = txsubset, annot = annFUN.gene2GO, gene2GO = txannotation)
+bp_enrichment <- runTest(object = bp_godata, algorithm = "weight01", statistic = "t")
+bp_enrichment <- GenTable(object = bp_godata, pvalue = bp_enrichment, topNodes = 2583)
+
+# Cellular Component
+cc_godata <- new("topGOdata", ontology = "CC", allGenes = txsubset, annot = annFUN.gene2GO, gene2GO = txannotation)
+cc_enrichment <- runTest(object = cc_godata, algorithm = "weight01", statistic = "t")
+cc_enrichment <- GenTable(object = cc_godata, pvalue = cc_enrichment, topNodes = 683)
+
+# Molecular Function
+mf_godata <- new("topGOdata", ontology = "MF", allGenes = txsubset, annot = annFUN.gene2GO, gene2GO = txannotation)
+mf_enrichment <- runTest(object = mf_godata, algorithm = "weight01", statistic = "t")
+mf_enrichment <- GenTable(object = mf_godata, pvalue = mf_enrichment, topNodes = 1606)
+
+# Binding enrichment result
+go_enrichment <- tibble(bind_rows(
+  bp_enrichment %>% mutate("go_class" = "BP"),
+  cc_enrichment %>% mutate("go_class" = "CC"),
+  mf_enrichment %>% mutate("go_class" = "MF")
+)) %>%
+  mutate(pvalue   = str_replace(string = pvalue, pattern = "< ", replacement = ""),
+         pvalue   = as.numeric(pvalue),
+         go_class = factor(go_class, levels = c("BP", "CC", "MF")))
+
+# Export the result
+write_delim(x = go_enrichment, file = "go_enrichment.tsv", delim = "\t", append = FALSE, col_names = TRUE)
+```
+
 # References
 
 <div id="refs" class="references csl-bib-body hanging-indent">
@@ -412,6 +585,14 @@ Computational Biology* 7 (10): e1002195.
 
 </div>
 
+<div id="ref-emms2019orthofinder" class="csl-entry">
+
+Emms, David M, and Steven Kelly. 2019. “OrthoFinder: Phylogenetic
+Orthology Inference for Comparative Genomics.” *Genome Biology* 20 (1):
+1–14.
+
+</div>
+
 <div id="ref-haas2013Trinity" class="csl-entry">
 
 Haas, Brian J, Alexie Papanicolaou, Moran Yassour, Manfred Grabherr,
@@ -445,6 +626,14 @@ Annotated Orthology Resource Based on 5090 Organisms and 2502 Viruses.”
 
 Jensen, Kathe R. 2007. “Biogeography of the Sacoglossa (Mollusca,
 Opisthobranchia).” *Bonner Zoologische Beiträge* 55 (3/4): 255–81.
+
+</div>
+
+<div id="ref-katoh2002mafft" class="csl-entry">
+
+Katoh, Kazutaka, Kazuharu Misawa, Kei-ichi Kuma, and Takashi Miyata.
+2002. “MAFFT: A Novel Method for Rapid Multiple Sequence Alignment Based
+on Fast Fourier Transform.” *Nucleic Acids Research* 30 (14): 3059–66.
 
 </div>
 
