@@ -1,3 +1,8 @@
+---
+output: github_document
+bibliography: "references.bib" 
+---
+
 <h1 align=center>
   <p>Transcriptome landscape of kleptoplastic sea slug <i>Elysia viridis</i></p>
 </h1>
@@ -10,9 +15,10 @@
   <a href="https://scholar.google.com/citations?hl=en&user=X-KLBboAAAAJ">Carlos A. Canchaya</a>
 </p>
 
-Certain sacoglossan sea slugs can sequester and maintain photosynthetically active chloroplasts through algae feeding, a phenomenon called kleptoplasty ([Cruz *et al*., 2013](https://academic.oup.com/jxb/article/64/13/3999/436339); [Rumpho *et al*., 2001](https://www.sciencedirect.com/user/identity/landing?code=Hth8LrKrfJuZBXgyrF2UD68jSyVVVzzZWMlXiELR&state=retryCounter%3D0%26csrfToken%3De3dbbab8-4b7d-4c90-bbb8-e3847797f01a%26idpPolicy%3Durn%253Acom%253Aelsevier%253Aidp%253Apolicy%253Aproduct%253Ainst_assoc%26returnUrl%3D%252Fscience%252Farticle%252Fpii%252FS0944200604700355%26prompt%3Dnone%26cid%3Darp-7e0b9f60-7591-41fa-919c-93101b032496)). Adding to the available data to shed some light on these processes, here we describe for the first time the transcriptomic landscape of the sea slug [*Elysia viridis* (Montagu, 1804)](https://www.marinespecies.org/aphia.php?p=taxdetails&id=139686) assembled *de novo* from a pool of ten individual. The reads and assembled transcriptome were deposited in the NCBI database under the BioProject accession number [**PRJNA549923**](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA549923). 
+Sea slugs from the superorder [Sacoglossa](https://www.marinespecies.org/aphia.php?p=taxdetails&id=167) can sequester functional chloroplast through feeding and keep them photosynthetically active inside their digestive tubules [@deVries2014plastid]. A small polyphyletic group of sacoglossan species can maintain the stolen plastids ([kleptoplasts](https://en.wikipedia.org/wiki/Kleptoplasty)) functional for more than a month [@handeler2009functional]. Despite an extensive research record [@deVries2014guide], some questions remain unsolved: How are the plastids recognised from the other components of prey’s cells? Why do the sea slugs remain alive after weeks of starvation if the photosynthates are not essential? Even if the ability to sequester the plastids has multiple independent origins along the evolution, can we find orthologs related to the time plastids remain active?
 
-We describe the pipeline used to analyse this dataset in the [wiki](https://github.com/manuelsmendoza/elvira/wiki).
+We tried to help to answer the three questions sequencing a novel transcriptome from a cosmopolitan species present along the European Atlantic shore, *Elysia viridis* (Montagu, 1804) [@jensen2007biogeography] and comparing it with other species of sea slugs. The sample collection and the methodology used to find the answers are described below. Although we report new findings, we are sure that further studies will be required to find a clear answer to the questions.  We here describe the full pipeline of our analysis.
+
 
 ```
 @article{
@@ -23,3 +29,5 @@ We describe the pipeline used to analyse this dataset in the [wiki](https://gith
   publisher={Cold Spring Harbor Laboratory}
 }
 ```
+
+# References
