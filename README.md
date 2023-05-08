@@ -41,13 +41,22 @@ we report new findings, we are sure that further studies will be
 required to find a clear answer to the questions. We here describe the
 full pipeline of our analysis.
 
-    @article{
-      title={Transcriptome landscape of kleptoplastic sea slug \textit{Elysia viridis}},
-      author={Mendoza, Manuel and Rocha, Sara and Troncoso, Jes\'us and Posada, David and Canchaya, Carlos A.},
-      journal={bioRxiv},
-      year={2022},
-      publisher={Cold Spring Harbor Laboratory}
-    }
+```
+@article{10.1093/mollus/eyad001,
+    author = {Mendoza, Manuel and Rocha, Sara and Troncoso, Jesús and Posada, David and Canchaya, Carlos},
+    title = "{Transcriptomic landscape of the kleptoplastic sea slug Elysia viridis}",
+    journal = {Journal of Molluscan Studies},
+    volume = {89},
+    number = {1},
+    year = {2023},
+    month = {01},
+    issn = {0260-1230},
+    doi = {10.1093/mollus/eyad001},
+    url = {https://doi.org/10.1093/mollus/eyad001},
+    note = {eyad001},
+    eprint = {https://academic.oup.com/mollus/article-pdf/89/1/eyad001/48945866/eyad001.pdf},
+}
+```
 
 # Working environment set up
 
